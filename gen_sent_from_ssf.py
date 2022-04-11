@@ -20,12 +20,16 @@ karak = []
 i = 0
 kar = ''
 for morph_line in morph_lines:
+	if(re.search('<Sentence id', morph_line)):
+		sen_id = re.sub(r'<Sentence id=\'(.*)\'>', r'\1', morph_line)
+		#print(sen_id)
 	if(not re.search('\(\(', morph_line) and not re.search(r'\)\)', morph_line) and re.search(r'\t', morph_line)):
 		sentence.append(morph_line.split("\t")[1])
 	#	if(not re.search(r'PUNC', morph_line)):
 	#		morph_line = re.sub(r'^.*<fs af=\'(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)\' .*', r'\1(\7)', morph_line)
 	#		vib.append(morph_line)
 	if(re.search(r'drel', morph_line)):
+		k_flag = 0
 		kar = ''
 		drel_flag = 1
 		vib_flag = 0
@@ -34,31 +38,51 @@ for morph_line in morph_lines:
 		morph_line = re.sub(r'>', '', morph_line)
 		drel.append(morph_line)
 		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+1]) and not re.search(r'drel', morph_lines[i+1]) and not re.search(r'\)\)', morph_lines[i+1])):
+			k_flag = 1
 			k = morph_lines[i+1].split("\t")
 			kar = k[1]
 			#karak.append(k[1])
 			vib_flag = 1
 		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+2]) and not re.search(r'drel', morph_lines[i+2]) and not re.search(r'\)\)', morph_lines[i+1]) and vib_flag == 0):
+			k_flag = 1
 			k = morph_lines[i+2].split("\t")
 			kar += " " + k[1]
 			#karak.append(k[1])
 			#print(k[1])
 		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+3]) and not re.search(r'drel', morph_lines[i+3]) and not re.search(r'\)\)', morph_lines[i+1]) and vib_flag==0):
+			k_flag = 1
 			k = morph_lines[i+3].split("\t")
 			kar += " " + k[1]
 			#karak.append(k[1])
-		else:
+		try:
+			s = morph_lines[i+4]
+			if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+4]) and not re.search(r'drel', morph_lines[i+4]) and not re.search(r'\)\)', morph_lines[i+4]) and vib_flag==0):
+				k_flag = 1
+				k = morph_lines[i+4].split("\t")
+				kar += " " + k[1]
+			#karak.append(k[1])
+		except:
+			s = ''
+		try:
+			s = morph_lines[i+5]
+			if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+5]) and not re.search(r'drel', morph_lines[i+5]) and not re.search(r'\)\)', morph_lines[i+5]) and vib_flag==0):
+				k_flag = 1
+				k = morph_lines[i+3].split("\t")
+				kar += " " + k[1]
+			#karak.append(k[1])
+		except:
+			s = ''
+		if(k_flag == 0):
 			kar += ""
 			#karak.append("")
 		karak.append(kar)
 	if(re.search('</Sentence', morph_line)):
-		print("iam")
 		final_sentence = ' '.join(sentence)
 		#final_drel = ', '.join(drel)
 		#final_vib = ', '.join(vib)
 		for d,k in zip(drel, karak):
 			d = re.sub(r"drel='(.*):.*'", r"\1" , d)
-			print(sentence_id, d, k, final_sentence)
+			print(sen_id, d, k, final_sentence, sep="\t")
 		#print(final_drel)
 		#print(final_vib)
 		sentence = []
