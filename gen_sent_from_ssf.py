@@ -19,6 +19,7 @@ vib_flag = 0
 karak = []
 i = 0
 kar = ''
+out_hash = {}
 for morph_line in morph_lines:
 	if(re.search('<Sentence id', morph_line)):
 		sen_id = re.sub(r'<Sentence id=\'(.*)\'>', r'\1', morph_line)
@@ -37,19 +38,25 @@ for morph_line in morph_lines:
 		morph_line = re.sub(r'^.*drel', 'drel', morph_line)
 		morph_line = re.sub(r'>', '', morph_line)
 		drel.append(morph_line)
-		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+1]) and not re.search(r'drel', morph_lines[i+1]) and not re.search(r'\)\)', morph_lines[i+1])):
+		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+1]) and not re.search(r'drel', morph_lines[i+1]) and not re.search(r'\)\)', morph_lines[i+1]) and vib_flag == 0):
+			if(re.search(r'\(\(', morph_lines[i+1]) or re.search(r'\)\)', morph_lines[i+1])):
+				continue
 			k_flag = 1
 			k = morph_lines[i+1].split("\t")
 			kar = k[1]
 			#karak.append(k[1])
 			vib_flag = 1
-		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+2]) and not re.search(r'drel', morph_lines[i+2]) and not re.search(r'\)\)', morph_lines[i+1]) and vib_flag == 0):
+		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+2]) and not re.search(r'drel', morph_lines[i+2]) and not re.search(r'\)\)', morph_lines[i+2]) and vib_flag == 0):
+			if(re.search(r'\(\(', morph_lines[i+2]) or re.search(r'\)\)', morph_lines[i+2])):
+				continue
 			k_flag = 1
 			k = morph_lines[i+2].split("\t")
 			kar += " " + k[1]
 			#karak.append(k[1])
 			#print(k[1])
-		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+3]) and not re.search(r'drel', morph_lines[i+3]) and not re.search(r'\)\)', morph_lines[i+1]) and vib_flag==0):
+		if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+3]) and not re.search(r'drel', morph_lines[i+3]) and not re.search(r'\)\)', morph_lines[i+3]) and vib_flag==0):
+			if(re.search(r'\(\(', morph_lines[i+3]) or re.search(r'\)\)', morph_lines[i+3])):
+				continue
 			k_flag = 1
 			k = morph_lines[i+3].split("\t")
 			kar += " " + k[1]
@@ -57,6 +64,8 @@ for morph_line in morph_lines:
 		try:
 			s = morph_lines[i+4]
 			if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+4]) and not re.search(r'drel', morph_lines[i+4]) and not re.search(r'\)\)', morph_lines[i+4]) and vib_flag==0):
+				if(re.search(r'\(\(', morph_lines[i+4]) or re.search(r'\)\)', morph_lines[i+1])):
+					continue
 				k_flag = 1
 				k = morph_lines[i+4].split("\t")
 				kar += " " + k[1]
@@ -67,7 +76,7 @@ for morph_line in morph_lines:
 			s = morph_lines[i+5]
 			if(re.search(r'(PSP|NST|N_NST)', morph_lines[i+5]) and not re.search(r'drel', morph_lines[i+5]) and not re.search(r'\)\)', morph_lines[i+5]) and vib_flag==0):
 				k_flag = 1
-				k = morph_lines[i+3].split("\t")
+				k = morph_lines[i+5].split("\t")
 				kar += " " + k[1]
 			#karak.append(k[1])
 		except:
@@ -82,7 +91,14 @@ for morph_line in morph_lines:
 		#final_vib = ', '.join(vib)
 		for d,k in zip(drel, karak):
 			d = re.sub(r"drel='(.*):.*'", r"\1" , d)
-			print(sen_id, d, k, final_sentence, sep="\t")
+			#print(sen_id, d, k, final_sentence, sep="\t")
+			if(d + "\t" + k in out_hash):
+				occur = out_hash[d + "\t" + k].split("\t")[0]
+				occur = int(occur) + 1
+				sentid = out_hash[d + "\t" + k].split("\t")[1]
+				out_hash[d + "\t" + k] = str(occur)  + "\t" + sen_id+", " + sentid + "\t" + final_sentence
+			else:
+				out_hash[d + "\t" + k] = str(1) + "\t" + sen_id + "\t" + final_sentence
 		#print(final_drel)
 		#print(final_vib)
 		sentence = []
@@ -91,4 +107,9 @@ for morph_line in morph_lines:
 		karak = []
 		sentence_id = sentence_id + 1
 	i = i + 1
-		
+
+for o in out_hash:
+	#print(o, out_hash[o])
+	val = out_hash[o]
+	vals = val.split("\t")
+	print(vals[1] + "\t" + o + "\t" + vals[0] + "\t" + vals[2])
